@@ -7,7 +7,7 @@ use std::thread::{self, JoinHandle};
 use std::time::Duration;
 
 use symphonia::core::audio::SampleBuffer;
-use symphonia::core::codecs::{DecoderOptions, CODEC_TYPE_NULL};
+use symphonia::core::codecs::DecoderOptions;
 use symphonia::core::errors::Error as SymphoniaError;
 use symphonia::core::formats::{FormatOptions, SeekMode, SeekTo};
 use symphonia::core::io::MediaSourceStream;
@@ -216,7 +216,7 @@ impl AudioPlayerEngine {
 /// 后台无损/多格式解码主循环：支持 FLAC, MP3, AAC, WAV, OGG 等
 fn decode_worker_loop(
     file_path: String,
-    mut ring_buf: Arc<AudioRingBuffer>,
+    ring_buf: Arc<AudioRingBuffer>,
     is_playing: Arc<AtomicBool>,
     should_stop: Arc<AtomicBool>,
     seek_target: Arc<AtomicI64>,

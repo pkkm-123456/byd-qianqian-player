@@ -1,4 +1,4 @@
-use encoding_rs::{GB18030, UTF_16LE, UTF_8};
+use encoding_rs::{GB18030, UTF_16LE};
 use pinyin::ToPinyin;
 use rusqlite::{params, Connection};
 
@@ -97,13 +97,13 @@ impl LyricsDatabase {
         }
 
         // 1. 优先精确搜索汉字（匹配歌名、歌手或单句歌词）
-        let fts_hanzi = format!(""{}"", clean);
+        let fts_hanzi = format!("\"{}\"", clean);
         if let Some(hit) = self.run_fts_query(&fts_hanzi)? {
             return Ok(Some(hit));
         }
 
         // 2. 自动转无声调拼音进行同音容错匹配（如语音把“周洁伦”识别错，拼音依然是 zhou jie lun）
-        let py_query = format!(""{}"", Self::to_toneless_pinyin(&clean));
+        let py_query = format!("\"{}\"", Self::to_toneless_pinyin(&clean));
         self.run_fts_query(&py_query)
     }
 

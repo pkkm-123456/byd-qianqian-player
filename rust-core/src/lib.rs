@@ -431,7 +431,7 @@ pub extern "system" fn Java_com_byd_qianqian_bridge_NativeAudioBridge_testFeiniu
 /// 保存并配置飞牛 NAS WebDAV
 #[no_mangle]
 pub extern "system" fn Java_com_byd_qianqian_bridge_NativeAudioBridge_configureFeiniuWebdav<'local>(
-    mut env: JNIEnv<'local>,
+    _env: JNIEnv<'local>,
     _class: JClass<'local>,
     _server_url: JString<'local>,
     _username: JString<'local>,

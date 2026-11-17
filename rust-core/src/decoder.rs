@@ -8,6 +8,7 @@ use std::time::Duration;
 
 use symphonia::core::audio::SampleBuffer;
 use symphonia::core::codecs::{DecoderOptions, CODEC_TYPE_NULL};
+use symphonia::core::errors::Error as SymphoniaError;
 use symphonia::core::formats::{FormatOptions, SeekMode, SeekTo};
 use symphonia::core::io::MediaSourceStream;
 use symphonia::core::meta::MetadataOptions;
@@ -266,6 +267,8 @@ fn decode_worker_loop(
 
     let mut sample_buf: Option<SampleBuffer<f32>> = None;
     let mut resample_temp = Vec::with_capacity(4096);
+    let mut src_channels = 2usize;
+    let mut src_rate = target_rate;
 
     while !should_stop.load(Ordering::Relaxed) {
         // 1. 检查是否存在 Seek 请求
@@ -308,6 +311,8 @@ fn decode_worker_loop(
             Ok(audio_buf_ref) => {
                 if sample_buf.is_none() {
                     let spec = *audio_buf_ref.spec();
+                    src_channels = spec.channels.count();
+                    src_rate = spec.rate;
                     let duration = audio_buf_ref.capacity() as u64;
                     sample_buf = Some(SampleBuffer::<f32>::new(duration, spec));
                 }
@@ -315,8 +320,6 @@ fn decode_worker_loop(
                 if let Some(ref mut sbuf) = sample_buf {
                     sbuf.copy_interleaved_ref(audio_buf_ref);
                     let raw_samples = sbuf.samples();
-                    let src_channels = sbuf.spec().channels.count();
-                    let src_rate = sbuf.spec().rate;
 
                     // 转换为 48kHz 标准立体声交错浮点格式
                     resample_temp.clear();

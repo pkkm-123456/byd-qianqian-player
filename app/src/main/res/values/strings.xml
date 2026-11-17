@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">千千静听车载版</string>
+    <string name="channel_name">千千静听车载播放服务</string>
+    <string name="channel_desc">保持后台音频播放与方向盘按键响应</string>
+</resources>

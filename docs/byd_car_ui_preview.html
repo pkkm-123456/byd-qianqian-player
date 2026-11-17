@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>比亚迪「千千静听」经典金属蓝皮肤与声浪脉冲实时预览</title>
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <style>
+    body {
+      background-color: #070B10;
+      color: #E2E8F0;
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Segoe UI", "Microsoft YaHei", sans-serif;
+      user-select: none;
+    }
+    /* 千千静听经典金属钢蓝外框渐变 */
+    .qianqian-chassis {
+      background: linear-gradient(180deg, #446583 0%, #2A465E 40%, #172B3C 85%, #0E1D2A 100%);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+      border: 1px solid #577793;
+    }
+    /* 千千静听暗夜深蓝 CRT/VFD 内屏 */
+    .qianqian-screen {
+      background: linear-gradient(180deg, #0E1E2E 0%, #0A1723 55%, #07121C 100%);
+      border: 1px solid rgba(82, 195, 247, 0.25);
+      box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.8), 0 0 15px rgba(10, 23, 35, 0.6);
+    }
+    /* 经典 3D 金属球形拉丝按钮 */
+    .metallic-btn {
+      background: radial-gradient(circle at 35% 30%, #4D7496 0%, #26435C 60%, #132435 100%);
+      border: 1px solid rgba(129, 212, 250, 0.35);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.4);
+      transition: all 0.15s ease;
+    }
+    .metallic-btn:active {
+      transform: scale(0.94);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.7), inset 0 2px 4px rgba(0,0,0,0.6);
+    }
+    .metallic-btn-large {
+      background: radial-gradient(circle at 35% 28%, #5C8BB3 0%, #294D6E 55%, #102334 100%);
+      border: 1.5px solid rgba(129, 212, 250, 0.55);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.6), inset 0 2px 2px rgba(255,255,255,0.5);
+    }
+    /* 高品质 HQ 金属质感胶囊 */
+    .metallic-badge {
+      background: linear-gradient(180deg, #37536C 0%, #1C3042 100%);
+      border: 1px solid rgba(129, 212, 250, 0.35);
+      box-shadow: 0 2px 5px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.25);
+    }
+    .glow-lyric {
+      text-shadow: 0 0 12px rgba(129, 212, 250, 0.7);
+    }
+    /* 自定义精细滚动条 */
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: #0A141D; }
+    ::-webkit-scrollbar-thumb { background: #26435C; border-radius: 2px; }
+  </style>
+</head>
+<body class="p-3 md:p-6 min-h-screen flex flex-col items-center">
+
+  <!-- 顶部形态切换控制器 -->
+  <div class="w-full max-w-5xl mb-4">
+    <div class="flex flex-wrap items-center justify-between gap-3 bg-[#111F2D] p-3 rounded-xl border border-[#2A445C] shadow-xl">
+      <div class="flex items-center gap-2">
+        <span class="w-6 h-6 rounded-full bg-[#FF7043] flex items-center justify-center text-xs shadow-md">🎧</span>
+        <h1 class="text-sm md:text-base font-bold text-white tracking-wide">千千静听 · 比亚迪车载版（1:1 复刻经典金属蓝）</h1>
+      </div>
+      <div class="flex flex-wrap gap-1.5" id="modeTabs">
+        <button onclick="switchMode('portrait')" id="btn-portrait" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-[#38BDF8] text-black transition-all">
+          📱 竖屏模式 (1:1 复刻截图)
+        </button>
+        <button onclick="switchMode('landscape')" id="btn-landscape" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-[#1D3246] text-gray-300 hover:text-white transition-all">
+          🖥️ 全屏横屏 (15.6寸三栏)
+        </button>
+        <button onclick="switchMode('split-half')" id="btn-split-half" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-[#1D3246] text-gray-300 hover:text-white transition-all">
+          🌗 1/2 对半分屏
+        </button>
+        <button onclick="switchMode('split-third')" id="btn-split-third" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-[#1D3246] text-gray-300 hover:text-white transition-all">
+          🧭 1/3 极窄导航伴侣
+        </button>
+        <button onclick="switchMode('nas')" id="btn-nas" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-[#1D3246] text-[#81D4FA] hover:text-white transition-all">
+          ⚙ 飞牛NAS直存
+        </button>
+        <button onclick="switchMode('preset')" id="btn-preset" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-[#1D3246] text-[#FFD54F] hover:text-white transition-all">
+          🎛️ 音响品类调谐
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 模拟测试与声浪驱动控制器 -->
+  <div class="w-full max-w-5xl mb-3 flex items-center justify-between text-xs px-3 py-2 bg-[#0C1722] rounded-lg border border-[#1D3246]">
+    <div class="flex items-center gap-3">
+      <span class="text-[#00E676] font-bold flex items-center gap-1.5">
+        <span class="w-2 h-2 rounded-full bg-[#00E676] animate-pulse"></span>
+        真实PCM声浪FFT计算 (48频段)
+      </span>
+      <span class="text-gray-400">| 弹道阻尼: 瞬态拔高 0.75 / 对数回落 0.030 / 峰值重力下坠</span>
+    </div>
+    <div class="flex items-center gap-2">
+      <button onclick="toggleAudioDemo()" id="btnPlayDemo" class="px-3 py-1 bg-[#25445E] hover:bg-[#345A7D] text-[#81D4FA] rounded font-medium transition-all">
+        ⏸ 正在模拟播放 (声浪跳动中)
+      </button>
+      <button onclick="triggerDrumBeat()" class="px-2.5 py-1 bg-[#1A3348] hover:bg-[#25445E] text-white rounded transition-all">
+        🥁 模拟大鼓点爆发
+      </button>
+    </div>
+  </div>
+
+  <!-- 车机屏幕模拟主视窗 -->
+  <div id="screenContainer" class="w-full max-w-5xl transition-all duration-300 flex justify-center items-center">
+    
+    <!-- ============================================================ -->
+    <!-- 1. 经典千千静听竖屏 1:1 复刻模式 (PORTRAIT) -->
+    <!-- ============================================================ -->
+    <div id="view-portrait" class="w-[390px] qianqian-chassis rounded-3xl p-4 flex flex-col justify-between" style="min-height: 780px;">
+      
+      <!-- 手机/车机状态栏 -->
+      <div class="flex items-center justify-between text-[11px] text-gray-300 font-mono pb-2">
+        <span>11:53</span>
+        <div class="flex items-center gap-2">
+          <span>4.6 K/s</span>
+          <span>4G</span>
+          <span>100% ⚡</span>
+        </div>
+      </div>
+
+      <!-- 千千静听顶栏 Logo -->
+      <div class="flex items-center justify-between pb-3">
+        <div class="flex items-center gap-2">
+          <div class="w-6 h-6 rounded-full bg-gradient-to-tr from-[#FF5722] to-[#FFAB91] flex items-center justify-center text-xs shadow-md">🎧</div>
+          <span class="text-sm font-bold text-white tracking-wider">千千静听</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-[10px] px-2 py-0.5 rounded bg-[#18344A] text-[#81D4FA] border border-[#81D4FA]/30">🎛️ 丹拿原音</span>
+          <span class="text-[10px] px-2 py-0.5 rounded bg-[#203A4E] text-[#FFD54F]">你好千千</span>
+        </div>
+      </div>
+
+      <!-- 核心深蓝 CRT/VFD 屏幕卡片 -->
+      <div class="qianqian-screen rounded-xl p-3.5 flex flex-col justify-between flex-1 my-1">
+        <!-- 歌曲信息 -->
+        <div class="flex justify-between items-start">
+          <div>
+            <h2 class="text-xl font-bold text-white leading-tight">湿吻</h2>
+            <p class="text-xs text-[#829FB8] mt-0.5">亿轩_Kingston, 彭梓烨_Leo</p>
+          </div>
+          <span class="text-[11px] text-[#68859E] font-medium">正在播放 · 立体声</span>
+        </div>
+
+        <!-- 48 段高密度跳动频谱画布 -->
+        <div class="w-full flex-1 my-3 flex items-center justify-center">
+          <canvas id="spectrumPortrait" class="w-full h-full" style="min-height: 280px;"></canvas>
+        </div>
+
+        <!-- 经典 3 行居中歌词 -->
+        <div class="flex flex-col items-center justify-center text-center py-1">
+          <span class="text-xs text-[#4C6B87]">旧情人</span>
+          <span class="text-base font-bold text-[#E0F2FE] my-0.5 glow-lyric tracking-wide">重逢的灵魂</span>
+          <span class="text-xs text-[#4C6B87]">真亦假</span>
+        </div>
+
+        <!-- 歌词开关与全屏标 -->
+        <div class="flex justify-between items-center pt-2">
+          <button class="px-2.5 py-0.5 rounded text-[11px] bg-white/10 hover:bg-white/20 text-[#B0BEC5] border border-white/20">
+            歌词
+          </button>
+          <span class="text-xs text-[#68859E] cursor-pointer hover:text-white">⤢</span>
+        </div>
+      </div>
+
+      <!-- 底部播控台 -->
+      <div class="mt-2 flex flex-col gap-2">
+        <!-- 青空蓝进度条 -->
+        <div>
+          <div class="w-full bg-[#162A3D] h-1.5 rounded-full relative cursor-pointer overflow-visible">
+            <div class="bg-[#38BDF8] h-1.5 rounded-full" style="width: 43.5%;"></div>
+            <div class="w-3.5 h-3.5 rounded-full bg-[#00E5FF] border-2 border-white absolute top-1/2 -mt-[7px] shadow-lg" style="left: 43.5%; transform: translateX(-50%);"></div>
+          </div>
+          <div class="flex justify-between text-[11px] text-[#8FA6BC] font-mono mt-1 px-1">
+            <span>1:11</span>
+            <span>2:43</span>
+          </div>
+        </div>
+
+        <!-- 5 个经典 3D 金属球形按键 -->
+        <div class="flex items-center justify-between px-2 pt-1">
+          <button class="w-10 h-10 rounded-full metallic-btn flex items-center justify-center text-gray-300 text-sm">🔁</button>
+          <button class="w-11 h-11 rounded-full metallic-btn flex items-center justify-center text-gray-200 text-sm">⏮</button>
+          <button id="btnCenterPlay" onclick="toggleAudioDemo()" class="w-14 h-14 rounded-full metallic-btn metallic-btn-large flex items-center justify-center text-white text-xl shadow-xl">
+            ⏸
+          </button>
+          <button class="w-11 h-11 rounded-full metallic-btn flex items-center justify-center text-gray-200 text-sm">⏭</button>
+          <button class="w-10 h-10 rounded-full metallic-btn flex items-center justify-center text-gray-300 text-sm">☰</button>
+        </div>
+
+        <!-- 底栏徽章与更多 -->
+        <div class="flex items-center justify-between px-2 pt-1 text-gray-300">
+          <button class="w-7 h-7 rounded-full metallic-btn flex items-center justify-center text-xs">⌄</button>
+          <div class="metallic-badge px-3 py-1 rounded-md text-xs font-semibold text-[#E0F2FE] tracking-wider cursor-pointer">
+            高品质 · HQ
+          </div>
+          <div class="flex items-center gap-2">
+            <button class="w-7 h-7 rounded-full metallic-btn flex items-center justify-center text-xs">♡</button>
+            <button class="w-7 h-7 rounded-full metallic-btn flex items-center justify-center text-xs">···</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- 2. 全屏横屏 15.6寸模式 (LANDSCAPE) -->
+    <!-- ============================================================ -->
+    <div id="view-landscape" class="w-full qianqian-chassis rounded-2xl p-4 hidden flex-col justify-between" style="min-height: 520px;">
+      <!-- 顶栏 -->
+      <div class="flex items-center justify-between pb-2 border-b border-[#385570] text-xs">
+        <div class="flex items-center gap-3">
+          <div class="w-5 h-5 rounded-full bg-gradient-to-tr from-[#FF5722] to-[#FFAB91] flex items-center justify-center text-xs">🎧</div>
+          <span class="text-sm font-bold text-white tracking-wide">千千静听 · 比亚迪车载版</span>
+          <span class="px-2 py-0.5 text-[10px] bg-[#18344A] text-[#81D4FA] rounded border border-[#81D4FA]/30 font-medium">🎛️ 丹拿 Hi-Fi 原音直通 (0ms低延迟)</span>
+        </div>
+        <div class="flex items-center gap-3">
+          <span class="px-2 py-0.5 text-[10px] bg-[#243E54] text-[#FFD54F] rounded">🎤 唤醒词: 你好千千</span>
+          <span class="px-2 py-0.5 text-[10px] bg-[#1B3245] text-[#81D4FA] rounded">⚙ 飞牛NAS: 已连接</span>
+          <span class="text-gray-300">1920 × 1080 全屏横屏</span>
+        </div>
+      </div>
+
+      <!-- 横屏主体双栏 -->
+      <div class="grid grid-cols-12 gap-4 my-3 flex-1 items-stretch">
+        <!-- 左侧：经典千千 CRT 蓝屏 + 48段音柱 -->
+        <div class="col-span-6 qianqian-screen rounded-xl p-4 flex flex-col justify-between">
+          <div class="flex justify-between items-start">
+            <div>
+              <h2 class="text-xl font-bold text-white">湿吻</h2>
+              <p class="text-xs text-[#829FB8] mt-0.5">亿轩_Kingston, 彭梓烨_Leo · 飞牛NAS直存</p>
+            </div>
+            <span class="text-xs text-[#68859E]">正在播放 · 立体声</span>
+          </div>
+
+          <div class="w-full flex-1 my-3 flex items-center justify-center">
+            <canvas id="spectrumLandscape" class="w-full h-full" style="min-height: 200px;"></canvas>
+          </div>
+
+          <!-- 经典 3 行居中歌词 -->
+          <div class="flex flex-col items-center justify-center text-center">
+            <span class="text-xs text-[#4C6B87]">旧情人</span>
+            <span class="text-base font-bold text-[#E0F2FE] glow-lyric">重逢的灵魂</span>
+            <span class="text-xs text-[#4C6B87]">真亦假</span>
+          </div>
+        </div>
+
+        <!-- 右侧：车载大屏沉浸式卡拉OK同步歌词 -->
+        <div class="col-span-6 qianqian-screen rounded-xl p-5 flex flex-col justify-center items-center text-center space-y-4">
+          <p class="text-sm text-[#4C6B87] transition-all">翻开抽屉泛黄的照片</p>
+          <p class="text-sm text-[#5C7D9B] transition-all">在旧日时光与你擦肩</p>
+          <p class="text-lg text-[#81D4FA] font-medium transition-all">夜幕沉入微醺的深渊</p>
+          <div class="p-3 bg-[#132A3E] rounded-xl border border-[#38BDF8]/40 shadow-lg w-full max-w-md">
+            <p class="text-2xl font-black text-white glow-lyric tracking-wider">重逢的灵魂 湿润了双眼</p>
+            <p class="text-xs text-[#00E676] mt-1 font-mono">01:11 / 02:43 丹拿 24bit/96kHz</p>
+          </div>
+          <p class="text-lg text-[#81D4FA] font-medium transition-all">叹这世间 真亦假 梦初醒</p>
+          <p class="text-sm text-[#5C7D9B] transition-all">回首唯有月色照无眠</p>
+        </div>
+      </div>
+
+      <!-- 横屏底栏播控台 -->
+      <div class="flex items-center justify-between px-3 pt-2">
+        <!-- 进度条 -->
+        <div class="w-1/3">
+          <div class="w-full bg-[#162A3D] h-2 rounded-full relative">
+            <div class="bg-[#38BDF8] h-2 rounded-full" style="width: 43.5%;"></div>
+            <div class="w-4 h-4 rounded-full bg-[#00E5FF] border-2 border-white absolute top-1/2 -mt-2 shadow-lg" style="left: 43.5%; transform: translateX(-50%);"></div>
+          </div>
+          <div class="flex justify-between text-[11px] text-[#8FA6BC] font-mono mt-1">
+            <span>01:11</span>
+            <span>02:43</span>
+          </div>
+        </div>
+
+        <!-- 经典金属球形按键 -->
+        <div class="flex items-center gap-4">
+          <button class="w-10 h-10 rounded-full metallic-btn flex items-center justify-center text-sm">🔁</button>
+          <button class="w-11 h-11 rounded-full metallic-btn flex items-center justify-center text-sm">⏮</button>
+          <button onclick="toggleAudioDemo()" class="w-14 h-14 rounded-full metallic-btn metallic-btn-large flex items-center justify-center text-white text-xl">
+            ⏸
+          </button>
+          <button class="w-11 h-11 rounded-full metallic-btn flex items-center justify-center text-sm">⏭</button>
+          <button class="w-10 h-10 rounded-full metallic-btn flex items-center justify-center text-sm">☰</button>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <div class="metallic-badge px-3 py-1 rounded-md text-xs font-semibold text-[#E0F2FE]">
+            高品质 · HQ
+          </div>
+          <button class="w-8 h-8 rounded-full metallic-btn flex items-center justify-center text-xs">♡</button>
+          <button class="w-8 h-8 rounded-full metallic-btn flex items-center justify-center text-xs">···</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- 3. 1/2 对半分屏模式 (SPLIT-HALF) -->
+    <!-- ============================================================ -->
+    <div id="view-split-half" class="w-[500px] qianqian-chassis rounded-2xl p-4 hidden flex-col justify-between" style="min-height: 520px;">
+      <div class="flex justify-between items-center pb-2 text-xs text-gray-300 border-b border-[#385570]">
+        <div class="flex items-center gap-2">
+          <span class="w-4 h-4 rounded-full bg-[#FF7043] flex items-center justify-center text-[10px]">🎧</span>
+          <span class="font-bold text-white">千千静听 (1/2 分屏)</span>
+        </div>
+        <span class="text-[#81D4FA] font-medium">🎛️ 丹拿直通</span>
+      </div>
+
+      <div class="qianqian-screen rounded-xl p-3 my-2 flex-1 flex flex-col justify-between">
+        <div>
+          <h2 class="text-base font-bold text-white">湿吻</h2>
+          <p class="text-xs text-[#829FB8]">亿轩_Kingston, 彭梓烨_Leo</p>
+        </div>
+        <div class="w-full flex-1 my-2 flex items-center justify-center">
+          <canvas id="spectrumSplitHalf" class="w-full h-full" style="min-height: 140px;"></canvas>
+        </div>
+        <div class="text-center py-1">
+          <p class="text-sm font-bold text-[#E0F2FE] glow-lyric">重逢的灵魂</p>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between px-2 pt-1">
+        <button class="w-9 h-9 rounded-full metallic-btn flex items-center justify-center text-xs">⏮</button>
+        <button onclick="toggleAudioDemo()" class="w-12 h-12 rounded-full metallic-btn metallic-btn-large flex items-center justify-center text-white text-lg">⏸</button>
+        <button class="w-9 h-9 rounded-full metallic-btn flex items-center justify-center text-xs">⏭</button>
+        <div class="metallic-badge px-2.5 py-1 rounded text-xs text-[#E0F2FE]">HQ</div>
+        <button class="w-8 h-8 rounded-full metallic-btn flex items-center justify-center text-xs">☰</button>
+      </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- 4. 1/3 极窄导航分屏模式 (SPLIT-THIRD) -->
+    <!-- ============================================================ -->
+    <div id="view-split-third" class="w-[320px] qianqian-chassis rounded-2xl p-3 hidden flex-col justify-between" style="min-height: 520px;">
+      <div class="flex justify-between items-center pb-2 text-xs text-gray-300 border-b border-[#385570]">
+        <span class="font-bold text-white">1/3 极窄导航伴侣</span>
+        <span class="text-[#00E676] text-[10px]">● 盲操优先</span>
+      </div>
+
+      <div class="qianqian-screen rounded-xl p-3 my-2 flex-1 flex flex-col justify-between">
+        <div class="text-center">
+          <h3 class="text-sm font-bold text-white truncate">湿吻</h3>
+          <p class="text-[11px] text-[#829FB8]">亿轩 · 彭梓烨</p>
+        </div>
+
+        <div class="w-full h-24 my-1 flex items-center justify-center">
+          <canvas id="spectrumSplitThird" class="w-full h-full"></canvas>
+        </div>
+
+        <div class="text-center bg-[#102334] p-2 rounded-lg border border-[#38BDF8]/20">
+          <p class="text-xs text-[#68859E]">旧情人</p>
+          <p class="text-sm font-black text-white glow-lyric my-0.5">重逢的灵魂</p>
+          <p class="text-xs text-[#68859E]">真亦假</p>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-around pt-1">
+        <button class="w-11 h-11 rounded-full metallic-btn flex items-center justify-center text-sm">⏮</button>
+        <button onclick="toggleAudioDemo()" class="w-13 h-13 rounded-full metallic-btn metallic-btn-large flex items-center justify-center text-white text-xl">⏸</button>
+        <button class="w-11 h-11 rounded-full metallic-btn flex items-center justify-center text-sm">⏭</button>
+      </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- 5. 飞牛 NAS 设置抽屉面板 -->
+    <!-- ============================================================ -->
+    <div id="view-nas" class="w-[420px] qianqian-chassis rounded-2xl p-5 hidden flex-col justify-between text-xs" style="min-height: 600px;">
+      <div class="flex justify-between items-center pb-3 border-b border-[#385570]">
+        <div class="flex items-center gap-2">
+          <span class="text-base">⚙</span>
+          <span class="font-bold text-white text-sm">飞牛 NAS 直存与 WebDAV 设置</span>
+        </div>
+        <span class="px-2 py-0.5 bg-[#00E676]/20 text-[#00E676] rounded text-[10px]">已连通</span>
+      </div>
+
+      <div class="space-y-3.5 my-3">
+        <div class="qianqian-screen p-3 rounded-xl flex items-center justify-between">
+          <div>
+            <p class="font-bold text-white">NAS 直存 (WebDAV)</p>
+            <p class="text-[11px] text-gray-400">歌曲在线播放，自动边听边存至车机</p>
+          </div>
+          <div class="w-10 h-6 bg-[#00E676] rounded-full relative flex items-center px-0.5 cursor-pointer">
+            <div class="w-5 h-5 bg-white rounded-full shadow-md ml-auto"></div>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-gray-300 font-medium mb-1">服务器地址 (默认 5005 端口)</label>
+          <input type="text" value="http://192.168.31.200:5005" class="w-full bg-[#0C1722] border border-[#2A445C] rounded-lg px-3 py-2 text-white font-mono focus:border-[#38BDF8] outline-none">
+        </div>
+
+        <div>
+          <label class="block text-gray-300 font-medium mb-1">飞牛账号</label>
+          <input type="text" value="byd_driver" class="w-full bg-[#0C1722] border border-[#2A445C] rounded-lg px-3 py-2 text-white outline-none">
+        </div>
+
+        <div>
+          <label class="block text-gray-300 font-medium mb-1">目标音乐文件夹</label>
+          <input type="text" value="Music/HiFi-Lossless" class="w-full bg-[#0C1722] border border-[#2A445C] rounded-lg px-3 py-2 text-white font-mono outline-none">
+        </div>
+
+        <div>
+          <label class="block text-gray-300 font-medium mb-1">车机本地离线缓存配额上限</label>
+          <div class="flex items-center gap-3">
+            <input type="range" min="10" max="120" value="50" class="flex-1 accent-[#38BDF8]">
+            <span class="text-white font-mono font-bold">50 GB</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex gap-3 pt-2">
+        <button class="flex-1 py-2 rounded-lg bg-[#243E54] hover:bg-[#345A7D] text-white font-medium">测试连通性</button>
+        <button class="flex-1 py-2 rounded-lg bg-[#00E676] hover:bg-[#00C853] text-black font-bold">保存并同步</button>
+      </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- 6. 音响品类与声场调谐抽屉 -->
+    <!-- ============================================================ -->
+    <div id="view-preset" class="w-[450px] qianqian-chassis rounded-2xl p-5 hidden flex-col justify-between text-xs" style="min-height: 600px;">
+      <div class="flex justify-between items-center pb-3 border-b border-[#385570]">
+        <div class="flex items-center gap-2">
+          <span class="text-base">🎛️</span>
+          <span class="font-bold text-white text-sm">比亚迪音响品牌专属声场调谐</span>
+        </div>
+        <span class="text-gray-400">硬解直通</span>
+      </div>
+
+      <div class="space-y-2.5 my-3 overflow-y-auto max-h-[440px] pr-1">
+        <div class="qianqian-screen p-3 rounded-xl border-2 border-[#00E676] cursor-pointer">
+          <div class="flex justify-between items-center">
+            <span class="font-bold text-white text-sm">3. 丹拿 Hi-Fi 原音直通</span>
+            <span class="text-[10px] px-1.5 py-0.5 bg-[#00E676] text-black rounded font-bold">当前启用</span>
+          </div>
+          <p class="text-[11px] text-gray-300 mt-1">适用：汉EV/DM-i、唐DM-p、海豹四驱等搭载 12/16/22 丹拿定制独立功放车型。</p>
+          <div class="mt-2 text-[10px] text-[#81D4FA] font-mono">延时: 0ms直通 | 声场: 1.05x | 低频单声道: 关闭</div>
+        </div>
+
+        <div class="qianqian-screen p-3 rounded-xl border border-[#2A445C] hover:border-[#81D4FA] cursor-pointer">
+          <div class="flex justify-between items-center">
+            <span class="font-bold text-white">1. 比亚迪原厂标准 4/6/8 扬声器</span>
+          </div>
+          <p class="text-[11px] text-gray-400 mt-1">适用：秦PLUS、宋Pro、海豚、海鸥、元PLUS等门板喇叭无独立外置功放车型。</p>
+          <div class="mt-1 text-[10px] text-gray-400 font-mono">延时: 1.8ms皇帝位 | 声场: 1.45x | 140Hz防门板共振</div>
+        </div>
+
+        <div class="qianqian-screen p-3 rounded-xl border border-[#2A445C] hover:border-[#81D4FA] cursor-pointer">
+          <div class="flex justify-between items-center">
+            <span class="font-bold text-white">2. Dirac 数字调音系统</span>
+          </div>
+          <p class="text-[11px] text-gray-400 mt-1">适用：已内置原厂 Dirac 冲激响应滤波车型，彻底规避双重延时相位抵消。</p>
+        </div>
+
+        <div class="qianqian-screen p-3 rounded-xl border border-[#2A445C] hover:border-[#81D4FA] cursor-pointer">
+          <div class="flex justify-between items-center">
+            <span class="font-bold text-white">5. 腾势帝瓦雷 SAM 专属</span>
+          </div>
+          <p class="text-[11px] text-gray-400 mt-1">释放 80Hz 超低频单声道下潜，匹配腾势 N7/N8/D9 帝瓦雷低音炮。</p>
+        </div>
+      </div>
+
+      <button onclick="switchMode('portrait')" class="w-full py-2 bg-[#25445E] hover:bg-[#345A7D] text-white rounded-lg font-bold">
+        返回千千静听播放器
+      </button>
+    </div>
+
+  </div>
+
+  <!-- JavaScript 交互与 48 频段跳动频谱物理仿真 -->
+  <script>
+    let currentMode = 'portrait';
+    let isPlaying = true;
+    let drumBoost = 0;
+
+    function switchMode(mode) {
+      currentMode = mode;
+      const modes = ['portrait', 'landscape', 'split-half', 'split-third', 'nas', 'preset'];
+      modes.forEach(m => {
+        const el = document.getElementById('view-' + m);
+        const btn = document.getElementById('btn-' + m);
+        if (el) el.classList.add('hidden');
+        if (el) el.classList.remove('flex');
+        if (btn) {
+          btn.classList.remove('bg-[#38BDF8]', 'text-black');
+          btn.classList.add('bg-[#1D3246]', 'text-gray-300');
+        }
+      });
+
+      const targetEl = document.getElementById('view-' + mode);
+      const targetBtn = document.getElementById('btn-' + mode);
+      if (targetEl) {
+        targetEl.classList.remove('hidden');
+        targetEl.classList.add('flex');
+      }
+      if (targetBtn) {
+        targetBtn.classList.remove('bg-[#1D3246]', 'text-gray-300');
+        targetBtn.classList.add('bg-[#38BDF8]', 'text-black');
+      }
+      setTimeout(() => window.dispatchEvent(new Event('resize')), 50);
+    }
+
+    function toggleAudioDemo() {
+      isPlaying = !isPlaying;
+      const btns = [document.getElementById('btnCenterPlay'), document.getElementById('btnPlayDemo')];
+      btns.forEach(b => {
+        if (b) b.innerText = isPlaying ? '⏸ 正在模拟播放 (声浪跳动中)' : '▶ 已暂停 (音柱回落至零)';
+      });
+      const centerBtn = document.getElementById('btnCenterPlay');
+      if (centerBtn) centerBtn.innerText = isPlaying ? '⏸' : '▶';
+    }
+
+    function triggerDrumBeat() {
+      drumBoost = 1.0;
+    }
+
+    // =========================================================================
+    // 经典千千静听 48 段跳动频谱物理渲染器
+    // - 模拟真实 PCM 音频 FFT 频域能量（低音鼓点、中音人声、高音踩镲）
+    // - 瞬态快升 (Attack 0.75)、平滑回落 (Decay 0.030)
+    // - 顶部黄绿峰值帽悬停 120ms 后按物理重力加速度自由落体！
+    // - 带有 LED 点阵梯子水平黑线分割
+    // =========================================================================
+    function startQianqianSpectrum(canvasId, barCount = 48) {
+      const canvas = document.getElementById(canvasId);
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const dpr = window.devicePixelRatio || 1;
+
+      function resize() {
+        const rect = canvas.getBoundingClientRect();
+        canvas.width = rect.width * dpr;
+        canvas.height = rect.height * dpr;
+      }
+      resize();
+      window.addEventListener('resize', resize);
+
+      const bars = new Float32Array(barCount);
+      const peaks = new Float32Array(barCount);
+      const peakHold = new Int32Array(barCount);
+      const peakVel = new Float32Array(barCount);
+
+      function render() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        const w = canvas.width;
+        const h = canvas.height;
+        const gap = 2.2 * dpr;
+        const barWidth = Math.max(2, (w - gap * (barCount - 1)) / barCount);
+
+        const now = Date.now();
+        const t = now * 0.003;
+
+        // 模拟一首 120BPM 歌曲的节奏声浪：底鼓节奏、副歌高潮、踩镲连击
+        const beatPhase = (now % 500) / 500; // 500ms 一拍 = 120BPM
+        const kickPulse = Math.pow(Math.max(0, 1.0 - beatPhase * 3.5), 2.0); // 强烈的鼓点瞬态
+
+        for (let i = 0; i < barCount; i++) {
+          let energy = 0;
+          if (isPlaying) {
+            // 真实歌曲能量分布曲线：
+            // 频段 0-8: 低频与超重低音 (底鼓 Kick, 贝斯 Bass)
+            // 频段 9-22: 中低频与人声基频 (Vocals, 钢琴)
+            // 频段 23-35: 中高频与吉他/主音 (Lead, 军鼓)
+            // 频段 36-47: 高频与踩镲/泛音 (Hi-Hat, Cymbals, Air)
+            if (i < 8) {
+              energy = 0.55 * kickPulse + 0.35 * Math.sin(t * 1.8 + i * 0.4) + drumBoost * 0.7;
+            } else if (i < 24) {
+              energy = 0.45 + 0.38 * Math.sin(t * 2.2 + i * 0.25) + 0.2 * kickPulse;
+            } else if (i < 36) {
+              energy = 0.35 + 0.45 * Math.sin(t * 3.0 + i * 0.15) * Math.cos(t * 0.8);
+            } else {
+              // 高频呈自然对数向下衰减，踩镲偶尔高能闪烁
+              const hiHat = Math.random() > 0.7 ? 0.3 : 0.05;
+              const decayFactor = 1.0 - (i - 36) / 16.0;
+              energy = (0.2 + 0.25 * Math.sin(t * 4.0 + i * 0.3) + hiHat) * decayFactor;
+            }
+          } else {
+            energy = 0;
+          }
+
+          energy = Math.max(0.02, Math.min(0.96, energy));
+
+          // 1. 瞬态起跳与平滑回落
+          if (energy > bars[i]) {
+            bars[i] = bars[i] * 0.25 + energy * 0.75; // 瞬时爆发 (Fast Attack)
+          } else {
+            bars[i] = Math.max(0, bars[i] - 0.028); // 平滑下落 (Decay)
+          }
+
+          // 2. 经典千千静听峰值悬停帽 (Peak Hold & Gravity Fall)
+          if (bars[i] >= peaks[i]) {
+            peaks[i] = bars[i];
+            peakHold[i] = 7; // 保持悬停约 120ms
+            peakVel[i] = 0.0;
+          } else if (peakHold[i] > 0) {
+            peakHold[i]--; // 悬停计数中
+          } else {
+            // 悬停结束，重力加速度自然坠落
+            peakVel[i] += 0.0016;
+            peaks[i] = Math.max(0, peaks[i] - peakVel[i]);
+          }
+
+          const barHeight = Math.max(3 * dpr, bars[i] * (h - 10 * dpr));
+          const x = i * (barWidth + gap);
+          const topY = h - barHeight;
+
+          // 3. 经典千千静听渐变色：底层葱翠绿 -> 中段明黄 -> 顶端橙红
+          const grad = ctx.createLinearGradient(0, topY, 0, h);
+          grad.addColorStop(0.0, '#FF3D00'); // 顶端极值赤红
+          grad.addColorStop(0.25, '#FF9800'); // 暖橙过渡
+          grad.addColorStop(0.55, '#FFEB3B'); // 中频明黄
+          grad.addColorStop(0.80, '#76FF03'); // 黄绿
+          grad.addColorStop(1.0, '#00E676'); // 底层翡翠绿
+
+          ctx.fillStyle = grad;
+          ctx.fillRect(x, topY, barWidth, barHeight);
+
+          // 4. 千千静听经典 LED 水平点阵梯子黑线
+          const segStep = 4.5 * dpr;
+          ctx.strokeStyle = '#0A1723'; // 与内屏同色的分节黑条
+          ctx.lineWidth = 1.2 * dpr;
+          for (let sy = h; sy > topY; sy -= segStep) {
+            ctx.beginPath();
+            ctx.moveTo(x, sy);
+            ctx.lineTo(x + barWidth, sy);
+            ctx.stroke();
+          }
+
+          // 5. 顶部明亮黄绿峰值悬停帽 (Peak Cap)
+          const peakY = Math.max(0, h - peaks[i] * (h - 10 * dpr) - 2.5 * dpr);
+          ctx.fillStyle = '#D4E157'; // 经典千千静听黄绿色峰值条
+          ctx.fillRect(x, peakY, barWidth, 2.2 * dpr);
+        }
+
+        // 鼓点衰减
+        if (drumBoost > 0) {
+          drumBoost = Math.max(0, drumBoost - 0.08);
+        }
+
+        requestAnimationFrame(render);
+      }
+      render();
+    }
+
+    window.onload = function() {
+      startQianqianSpectrum('spectrumPortrait', 48);
+      startQianqianSpectrum('spectrumLandscape', 48);
+      startQianqianSpectrum('spectrumSplitHalf', 32);
+      startQianqianSpectrum('spectrumSplitThird', 20);
+    };
+  </script>
+</body>
+</html>

@@ -19,7 +19,7 @@ class FloatingLyricsWindow(private val context: Context) {
     private var updateJob: Job? = null
     private var isShowing = false
 
-    private val layoutParams = WindowManager.LayoutParams(
+    private val wmParams = WindowManager.LayoutParams(
         WindowManager.LayoutParams.WRAP_CONTENT,
         WindowManager.LayoutParams.WRAP_CONTENT,
         WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
@@ -50,19 +50,19 @@ class FloatingLyricsWindow(private val context: Context) {
                 when (event.action) {
                     MotionEvent.ACTION_DOWN -> {
                         downY = event.rawY
-                        startParamY = layoutParams.y
+                        startParamY = wmParams.y
                         true
                     }
                     MotionEvent.ACTION_MOVE -> {
-                        layoutParams.y = (startParamY + (event.rawY - downY).toInt()).coerceAtLeast(0)
-                        windowManager.updateViewLayout(this, layoutParams)
+                        wmParams.y = (startParamY + (event.rawY - downY).toInt()).coerceAtLeast(0)
+                        windowManager.updateViewLayout(this, wmParams)
                         true
                     }
                     else -> false
                 }
             }
         }
-        windowManager.addView(tv, layoutParams)
+        windowManager.addView(tv, wmParams)
         textView = tv
         isShowing = true
 

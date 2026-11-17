@@ -115,7 +115,7 @@ class MainActivity : ComponentActivity() {
         floatingLyrics?.toggle()
     }
 
-    override fun onNewIntent(intent: Intent?) {
+    override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
         handleIntent(intent)
@@ -128,7 +128,7 @@ class MainActivity : ComponentActivity() {
             ?: ""
         if (query.isNotEmpty()) {
             PlaylistManager.searchAndPlay(query, applicationContext)
-        } else if (intent.action == android.media.action.MEDIA_PLAY_FROM_SEARCH) {
+        } else if (intent.action == "android.media.action.MEDIA_PLAY_FROM_SEARCH") {
             if (!PlaylistManager.isPlaying.value) {
                 PlaylistManager.togglePlayPause()
             }

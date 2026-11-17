@@ -160,7 +160,7 @@ class CarPlaybackService : MediaSessionService(), AudioManager.OnAudioFocusChang
             ACTION_PLAY_PAUSE -> PlaylistManager.togglePlayPause()
             ACTION_PREV -> PlaylistManager.skipPrevious()
             ACTION_NEXT -> PlaylistManager.skipNext()
-            android.media.action.MEDIA_PLAY_FROM_SEARCH -> {
+            "android.media.action.MEDIA_PLAY_FROM_SEARCH" -> {
                 val q = intent.getStringExtra(android.app.SearchManager.QUERY).orEmpty()
                 PlaylistManager.searchAndPlay(q, applicationContext)
             }

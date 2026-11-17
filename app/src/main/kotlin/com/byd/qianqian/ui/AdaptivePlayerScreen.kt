@@ -605,14 +605,6 @@ private fun QianqianMetallicDeck(
     }
 }
 
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                MetallicCircleButton(size = 32.dp, icon = "♡", onClick = onToggleFloatingLyrics)
-                MetallicCircleButton(size = 32.dp, icon = "···", onClick = onVoiceSearch)
-            }
-        }
-    }
-}
-
 /**
  * 经典千千静听 3D 金属球形按钮
  */

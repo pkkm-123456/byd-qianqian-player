@@ -11,8 +11,13 @@ class BootResumeReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val action = intent.action ?: return
         if (action == Intent.ACTION_BOOT_COMPLETED || action == "android.intent.action.QUICKBOOT_POWERON") {
-            val serviceIntent = Intent(context, CarPlaybackService::class.java)
-            context.startForegroundService(serviceIntent)
+            com.byd.qianqian.manager.VoiceWakeManager.init(context)
+            if (com.byd.qianqian.manager.VoiceWakeManager.config.value.autoResumeOnBoot) {
+                val serviceIntent = Intent(context, CarPlaybackService::class.java).apply {
+                    action = CarPlaybackService.ACTION_PLAY_PAUSE
+                }
+                context.startForegroundService(serviceIntent)
+            }
         }
     }
 }

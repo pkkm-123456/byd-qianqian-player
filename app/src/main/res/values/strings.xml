@@ -3,4 +3,5 @@
     <string name="app_name">千千静听车载版</string>
     <string name="channel_name">千千静听车载播放服务</string>
     <string name="channel_desc">保持后台音频播放与方向盘按键响应</string>
+    <string name="accessibility_service_desc">用于接管比亚迪小迪语音唤醒指令，在小迪触发音乐时自动唤起千千静听并无缝接管播放。</string>
 </resources>

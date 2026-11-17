@@ -31,6 +31,9 @@ object VoiceWakeManager {
         val enabled = prefs.getBoolean("wake_enabled", true)
         val text = prefs.getString("wake_text", "你好千千") ?: "你好千千"
         val sensitivity = prefs.getFloat("wake_sensitivity", 0.65f)
+        val autoForeground = prefs.getBoolean("byd_xiaodi_auto_foreground", true)
+        val hijackDefault = prefs.getBoolean("byd_xiaodi_hijack_default", true)
+        val autoResume = prefs.getBoolean("auto_resume_on_boot", true)
 
         val templateFile = File(context.filesDir, TEMPLATE_FILE)
         val hasTemplate = templateFile.exists() && templateFile.length() > 0
@@ -43,8 +46,26 @@ object VoiceWakeManager {
             wakeWordText = text,
             sensitivity = sensitivity,
             hasCustomVoiceTemplate = hasTemplate,
-            recordedTakes = if (hasTemplate) 3 else 0
+            recordedTakes = if (hasTemplate) 3 else 0,
+            bydXiaoDiAutoForeground = autoForeground,
+            bydXiaoDiHijackDefault = hijackDefault,
+            autoResumeOnBoot = autoResume
         )
+    }
+
+    fun setBydXiaoDiAutoForeground(context: Context, enabled: Boolean) {
+        _config.value = _config.value.copy(bydXiaoDiAutoForeground = enabled)
+        getPrefs(context).edit().putBoolean("byd_xiaodi_auto_foreground", enabled).apply()
+    }
+
+    fun setBydXiaoDiHijackDefault(context: Context, enabled: Boolean) {
+        _config.value = _config.value.copy(bydXiaoDiHijackDefault = enabled)
+        getPrefs(context).edit().putBoolean("byd_xiaodi_hijack_default", enabled).apply()
+    }
+
+    fun setAutoResumeOnBoot(context: Context, enabled: Boolean) {
+        _config.value = _config.value.copy(autoResumeOnBoot = enabled)
+        getPrefs(context).edit().putBoolean("auto_resume_on_boot", enabled).apply()
     }
 
     fun updateWakeWordText(context: Context, newText: String) {

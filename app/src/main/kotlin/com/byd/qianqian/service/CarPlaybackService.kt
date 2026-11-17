@@ -117,9 +117,31 @@ class CarPlaybackService : MediaSessionService(), AudioManager.OnAudioFocusChang
                 ): ListenableFuture<SessionResult> {
                     if (customCommand.customAction == "ACTION_VOICE_LYRICS_SEARCH") {
                         val query = args.getString("query").orEmpty()
-                        NativeAudioBridge.searchAndPlayByLyricsOrTitle(query)
+                        PlaylistManager.searchAndPlay(query, applicationContext)
                     }
                     return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
+                }
+
+                override fun onPlaybackResumption(
+                    mediaSession: MediaSession,
+                    controller: MediaSession.ControllerInfo
+                ): ListenableFuture<MediaSession.MediaItemsWithStartPosition> {
+                    val track = PlaylistManager.currentTrack.value
+                    if (track != null) {
+                        val metadata = MediaMetadata.Builder()
+                            .setTitle(track.title)
+                            .setArtist(track.artist)
+                            .setAlbumTitle(track.album)
+                            .build()
+                        val item = MediaItem.Builder()
+                            .setMediaId(track.id)
+                            .setMediaMetadata(metadata)
+                            .build()
+                        return Futures.immediateFuture(
+                            MediaSession.MediaItemsWithStartPosition(listOf(item), 0, 0L)
+                        )
+                    }
+                    return super.onPlaybackResumption(mediaSession, controller)
                 }
             })
             .build()
@@ -138,6 +160,10 @@ class CarPlaybackService : MediaSessionService(), AudioManager.OnAudioFocusChang
             ACTION_PLAY_PAUSE -> PlaylistManager.togglePlayPause()
             ACTION_PREV -> PlaylistManager.skipPrevious()
             ACTION_NEXT -> PlaylistManager.skipNext()
+            android.media.action.MEDIA_PLAY_FROM_SEARCH -> {
+                val q = intent.getStringExtra(android.app.SearchManager.QUERY).orEmpty()
+                PlaylistManager.searchAndPlay(q, applicationContext)
+            }
         }
         return super.onStartCommand(intent, flags, startId)
     }

@@ -37,6 +37,31 @@ impl NasCacheManager {
         self.max_quota_bytes = max_quota_bytes;
     }
 
+    pub fn detect_extension(nas_url: &str) -> &'static str {
+        let clean_url = nas_url.split('?').next().unwrap_or(nas_url).to_lowercase();
+        if clean_url.ends_with(".flac") {
+            "flac"
+        } else if clean_url.ends_with(".wav") {
+            "wav"
+        } else if clean_url.ends_with(".mp3") {
+            "mp3"
+        } else if clean_url.ends_with(".ape") {
+            "ape"
+        } else if clean_url.ends_with(".dsf") {
+            "dsf"
+        } else if clean_url.ends_with(".dff") {
+            "dff"
+        } else if clean_url.ends_with(".m4a") {
+            "m4a"
+        } else if clean_url.ends_with(".ogg") {
+            "ogg"
+        } else if clean_url.ends_with(".aac") {
+            "aac"
+        } else {
+            "flac"
+        }
+    }
+
     /// 仅拉取 NAS 音频文件前 64KB 头部字节（用于免全量下载直接解析 ID3v2/FLAC 内嵌歌词与歌名标签）
     pub fn fetch_header_64kb(&self, url: &str, user: &str, pass: &str) -> Result<Vec<u8>, String> {
         let resp = self
@@ -57,13 +82,14 @@ impl NasCacheManager {
         user: &str,
         pass: &str,
     ) -> Result<PathBuf, String> {
-        let final_path = self.cache_dir.join(format!("{}.flac", song_id));
+        let ext = Self::detect_extension(nas_url);
+        let final_path = self.cache_dir.join(format!("{}.{}", song_id, ext));
         if final_path.exists() {
             self.touch_last_played(song_id)?;
             return Ok(final_path);
         }
 
-        let part_path = self.cache_dir.join(format!("{}.flac.part", song_id));
+        let part_path = self.cache_dir.join(format!("{}.{}.part", song_id, ext));
         let mut offset = part_path.metadata().map(|m| m.len()).unwrap_or(0);
         let chunk_size: u64 = 512 * 1024; // 512KB 分块拉取，兼顾车载 4G/5G 弱网重连
 

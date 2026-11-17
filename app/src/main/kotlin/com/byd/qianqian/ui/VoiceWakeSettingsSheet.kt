@@ -314,21 +314,77 @@ fun VoiceWakeSettingsSheet(
 
         Spacer(modifier = Modifier.height(14.dp))
 
-        // 4. 原车小迪联动与免唤醒说明卡片
+        // 4. 原车小迪联动与熊猫车机模式接管卡片
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(Color(0xFF0F1E28), RoundedCornerShape(10.dp))
                 .padding(14.dp)
         ) {
-            Text("💡 比亚迪原车「小迪」双模兼容", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color(0xFF64B5F6))
-            Spacer(modifier = Modifier.height(4.dp))
+            Text("💡 比亚迪原车「小迪」双模与熊猫车机接管", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Color(0xFF64B5F6))
+            Spacer(modifier = Modifier.height(6.dp))
             Text(
-                text = "• 原车小迪联动：随时按下方向盘语音键或呼叫「你好小迪，播放 / 下一首 / 播放周杰伦」，车机将通过 MediaSession 自动无缝遥控本播放器。\n• 应用内专属唤醒：说出自定义唤醒词「$wakeText」可独家享受本应用歌词拼音级容错搜索与毫秒压音回弹。",
+                text = "借鉴熊猫车机核心架构：深度捕获比亚迪系统广播，无需按键，随时呼叫小迪点歌即播。",
                 fontSize = 12.sp,
-                color = Color(0xFFB0BEC5),
-                lineHeight = 17.sp
+                color = Color(0xFFB0BEC5)
             )
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // 开关1：深度接管小迪语音播控
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text("小迪语音指令深度接管（熊猫车机模式）", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = Color.White)
+                    Text("响应「你好小迪播放音乐/播放晴天/下一首」系统级广播", fontSize = 11.sp, color = Color(0xFF90A4AE))
+                }
+                Switch(
+                    checked = wakeConfig.bydXiaoDiHijackDefault,
+                    onCheckedChange = { VoiceWakeManager.setBydXiaoDiHijackDefault(context, it) },
+                    colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = greenAccent)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // 开关2：小迪唤醒时自动打开千千静听前台大屏
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text("小迪点歌时自动打开千千静听大屏", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = Color.White)
+                    Text("小迪识别成功后自动将千千静听调至前台，展示经典皮肤与动态频谱", fontSize = 11.sp, color = Color(0xFF90A4AE))
+                }
+                Switch(
+                    checked = wakeConfig.bydXiaoDiAutoForeground,
+                    onCheckedChange = { VoiceWakeManager.setBydXiaoDiAutoForeground(context, it) },
+                    colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = greenAccent)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // 按钮：开启无障碍服务（针对部分 DiLink 硬编码酷我/酷狗的系统）
+            OutlinedButton(
+                onClick = {
+                    try {
+                        val intent = android.content.Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS).apply {
+                            flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK
+                        }
+                        context.startActivity(intent)
+                    } catch (_: Exception) {}
+                },
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF64B5F6)),
+                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF1976D2))
+            ) {
+                Text("🛠 启用无障碍接管服务（解决原车强开酷我/酷狗）", fontSize = 12.sp)
+            }
         }
     }
 }

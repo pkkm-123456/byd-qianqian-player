@@ -3,7 +3,11 @@ name: Build BYD Car Qianqian APK
 on:
   push:
     branches: [ "main", "master" ]
+    tags: [ "v*" ]
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   build-apk:
@@ -18,10 +22,22 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
+      - name: Set up Gradle 8.7
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.7'
+
       - name: Set up Android NDK & CMake
         run: |
-          echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "ndk;26.1.10909125" "cmake;3.22.1" "platforms;android-34" "build-tools;34.0.0"
-          echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/26.1.10909125" >> $GITHUB_ENV
+          if [ -d "$ANDROID_SDK_ROOT/ndk/26.1.10909125" ]; then
+            echo "ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/26.1.10909125" >> $GITHUB_ENV
+          elif [ -d "$ANDROID_HOME/ndk/26.1.10909125" ]; then
+            echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/26.1.10909125" >> $GITHUB_ENV
+          else
+            yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
+            $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "ndk;26.1.10909125" "cmake;3.22.1" "platforms;android-34" "build-tools;34.0.0"
+            echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/26.1.10909125" >> $GITHUB_ENV
+          fi
 
       - name: Set up Rust & Android targets
         uses: dtolnay/rust-toolchain@stable
@@ -36,13 +52,38 @@ jobs:
         run: |
           cargo ndk -t arm64-v8a -t armeabi-v7a -o ../app/src/main/jniLibs build --release
 
-      - name: Build Signed Debug/Release APK with Gradle
+      - name: Build Signed Debug APK with Gradle
         run: |
-          chmod +x gradlew
-          ./gradlew :app:assembleDebug
+          gradle :app:assembleDebug --no-daemon --stacktrace
 
-      - name: Upload BYD Car Installable APK
+      - name: Rename APK
+        run: |
+          mkdir -p release-apk
+          cp app/build/outputs/apk/debug/*.apk release-apk/byd-qianqian-player-v1.0.0.apk
+
+      - name: Upload BYD Car Installable APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: byd-qianqian-car-player-apk
-          path: app/build/outputs/apk/debug/*.apk
+          name: byd-qianqian-player-v1.0.0
+          path: release-apk/byd-qianqian-player-v1.0.0.apk
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
+        with:
+          tag_name: v1.0.0-release
+          name: "比亚迪千千静听车机版 v1.0.0 正式发布"
+          body: |
+            ### 🚗 比亚迪「千千静听」车规级 Hi-Fi 播放器 APK 下载
+            
+            本安装包已针对比亚迪宋/汉/唐/秦/元/海豹/腾势及全系 DiLink 2.0 / 3.0 / 4.0 / 5.0 旋转中控屏深度优化适配：
+            - **经典皮肤**：1:1 复刻 Windows 千千静听 5.x 经典金属质感深蓝面板、荧光绿滚字液晶屏与 60fps 动态 FFT 频谱。
+            - **熊猫车机模式**：深度接管比亚迪「小迪」语音广播与系统播控，呼叫「你好小迪，播放音乐 / 播放晴天 / 下一首」秒开千千静听并自动弹窗大屏。
+            - **原厂默认播放器接管**：内置无障碍接管服务，彻底解决车机硬编码启动酷我/酷狗的顽疾。
+            - **丹拿/帝瓦雷定制 DSP**：提供丹拿 Hi-Fi 直通、主驾 1.8ms 皇帝位声场延时补偿与 3D M/S 环绕声。
+            - **飞牛私有云 NAS 直连**：WebDAV 协议无损串流，智能 LRU 4GB 高速缓存，无网络离线盲听。
+            - **高德地图混音**：导航播报平滑压低音乐至 20%，雷达与倒车影像自动静音。
+          files: release-apk/byd-qianqian-player-v1.0.0.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+

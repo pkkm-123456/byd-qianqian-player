@@ -240,6 +240,57 @@ object PlaylistManager {
         playTrack(list[targetIdx])
     }
 
+    /**
+     * 比亚迪小迪语音与端侧语音核心：智能解析自然语言，匹配歌名/歌手并触发播放
+     * 支持「周杰伦的晴天」、「播放海阔天空」、「我想听王菲」、「播放音乐」
+     */
+    fun searchAndPlay(query: String, context: Context? = null): Boolean {
+        val clean = query.trim()
+            .replace(Regex("^(你好小迪|小迪|你好千千|千千|我想听|播放|放一首|来一首|放首歌|搜歌词|搜索歌词|找一下|唱一句|唱首|放)"), "")
+            .replace(Regex("(这首歌|这首音乐|的歌)$"), "")
+            .trim()
+
+        if (clean.isEmpty()) {
+            if (!_isPlaying.value) {
+                togglePlayPause()
+            }
+            return true
+        }
+
+        val list = _playlist.value
+        val splitQuery = if (clean.contains("的")) {
+            val parts = clean.split("的", limit = 2)
+            parts[0].trim() to parts[1].trim()
+        } else {
+            null
+        }
+
+        val matchedTrack = list.firstOrNull { track ->
+            if (splitQuery != null) {
+                val (artistPart, titlePart) = splitQuery
+                (track.artist.contains(artistPart, ignoreCase = true) && track.title.contains(titlePart, ignoreCase = true)) ||
+                (track.title.contains(clean, ignoreCase = true) || track.artist.contains(clean, ignoreCase = true))
+            } else {
+                track.title.contains(clean, ignoreCase = true) ||
+                track.artist.contains(clean, ignoreCase = true) ||
+                clean.contains(track.title, ignoreCase = true)
+            }
+        }
+
+        if (matchedTrack != null) {
+            playTrack(matchedTrack, context)
+            return true
+        }
+
+        // 调用底座 Rust SQLite FTS5 引擎进行拼音与全歌词检索
+        val hitMsg = NativeAudioBridge.searchAndPlayByLyricsOrTitle(clean)
+        if (hitMsg.contains("已定位播放")) {
+            _isPlaying.value = true
+            return true
+        }
+        return false
+    }
+
     fun togglePlayPause() {
         val nextState = !_isPlaying.value
         _isPlaying.value = nextState

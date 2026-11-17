@@ -34,6 +34,15 @@ android {
         }
     }
 
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = "17"
+    }
+
     buildFeatures {
         compose = true
         prefab = true // 用于引入 Google Oboe 原生库
@@ -41,6 +50,12 @@ android {
 
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.14"
+    }
+
+    packaging {
+        jniLibs {
+            pickFirsts += listOf("**/libc++_shared.so")
+        }
     }
 
     externalNativeBuild {

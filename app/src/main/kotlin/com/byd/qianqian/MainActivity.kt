@@ -34,6 +34,8 @@ class MainActivity : ComponentActivity() {
         floatingLyrics = FloatingLyricsWindow(applicationContext)
         voiceController = InAppVoiceController(applicationContext)
 
+        handleIntent(intent)
+
         setContent {
             val currentTrack by PlaylistManager.currentTrack.collectAsState()
             val isPlaying by PlaylistManager.isPlaying.collectAsState()
@@ -111,6 +113,26 @@ class MainActivity : ComponentActivity() {
             return
         }
         floatingLyrics?.toggle()
+    }
+
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        handleIntent(intent)
+    }
+
+    private fun handleIntent(intent: Intent?) {
+        if (intent == null) return
+        val query = intent.getStringExtra(android.app.SearchManager.QUERY)
+            ?: intent.getStringExtra("voice_query")
+            ?: ""
+        if (query.isNotEmpty()) {
+            PlaylistManager.searchAndPlay(query, applicationContext)
+        } else if (intent.action == android.media.action.MEDIA_PLAY_FROM_SEARCH) {
+            if (!PlaylistManager.isPlaying.value) {
+                PlaylistManager.togglePlayPause()
+            }
+        }
     }
 
     override fun onDestroy() {

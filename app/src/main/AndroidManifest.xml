@@ -73,5 +73,34 @@
                 <action android:name="android.intent.action.QUICKBOOT_POWERON" />
             </intent-filter>
         </receiver>
+
+        <!-- 比亚迪小迪语音系统广播拦截接收器（借鉴熊猫车机核心架构，深度接管小迪唤醒与指令） -->
+        <receiver
+            android:name=".voice.BydXiaoDiReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter android:priority="1000">
+                <action android:name="com.byd.voice.action.MUSIC_CONTROL" />
+                <action android:name="com.byd.voice.action.MEDIA_CONTROL" />
+                <action android:name="com.byd.voice.action.WAKEUP" />
+                <action android:name="com.byd.dilink.action.VOICE_COMMAND" />
+                <action android:name="com.iflytek.cutefly.speechclient.ACTION_VOICE_COMMAND" />
+                <action android:name="android.media.action.MEDIA_PLAY_FROM_SEARCH" />
+                <action android:name="android.intent.action.MEDIA_BUTTON" />
+            </intent-filter>
+        </receiver>
+
+        <!-- 熊猫车机原版无障碍服务：当车机硬编码启动原厂酷我/酷狗时，自动静音压制并无缝切回千千静听 -->
+        <service
+            android:name=".voice.BydXiaoDiAccessibilityService"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/accessibility_service_config" />
+        </service>
     </application>
 </manifest>

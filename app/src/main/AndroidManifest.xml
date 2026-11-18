@@ -74,6 +74,20 @@
             </intent-filter>
         </receiver>
 
+        <!-- 比亚迪车载 USB U盘热插拔实时扫描接收器 -->
+        <receiver
+            android:name=".service.UsbStorageReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MEDIA_MOUNTED" />
+                <action android:name="android.intent.action.MEDIA_UNMOUNTED" />
+                <action android:name="android.intent.action.MEDIA_EJECT" />
+                <action android:name="android.intent.action.MEDIA_REMOVED" />
+                <data android:scheme="file" />
+            </intent-filter>
+        </receiver>
+
         <!-- 比亚迪小迪语音系统广播拦截接收器（借鉴熊猫车机核心架构，深度接管小迪唤醒与指令） -->
         <receiver
             android:name=".voice.BydXiaoDiReceiver"

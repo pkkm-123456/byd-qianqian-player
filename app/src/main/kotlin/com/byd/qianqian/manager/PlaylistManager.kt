@@ -9,8 +9,17 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import java.io.File
 
+enum class PlayMode(val label: String, val icon: String) {
+    LIST_LOOP("列表循环", "🔁"),
+    SINGLE_LOOP("单曲循环", "🔂"),
+    SHUFFLE("随机播放", "🔀"),
+    SEQUENTIAL("顺序播放", "➡")
+}
+
 object PlaylistManager {
+    private const val PREF_PLAYBACK = "qianqian_car_playback_state"
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+    private var appContext: Context? = null
 
     private val _playlist = MutableStateFlow<List<Track>>(emptyList())
     val playlist = _playlist.asStateFlow()
@@ -24,6 +33,9 @@ object PlaylistManager {
     private val _isPlaying = MutableStateFlow(false)
     val isPlaying = _isPlaying.asStateFlow()
 
+    private val _playMode = MutableStateFlow(PlayMode.LIST_LOOP)
+    val playMode = _playMode.asStateFlow()
+
     private val _currentAudioPreset = MutableStateFlow(com.byd.qianqian.model.AudioPreset.BYD_STANDARD)
     val currentAudioPreset = _currentAudioPreset.asStateFlow()
 
@@ -32,6 +44,9 @@ object PlaylistManager {
 
     private val _stereoWidth = MutableStateFlow(1.35f)
     val stereoWidth = _stereoWidth.asStateFlow()
+
+    private val _scanStatusMessage = MutableStateFlow<String?>(null)
+    val scanStatusMessage = _scanStatusMessage.asStateFlow()
 
     var onTrackChangedListener: ((Track, Boolean) -> Unit)? = null
 
@@ -148,11 +163,15 @@ object PlaylistManager {
 
             if (foundTracks.isNotEmpty()) {
                 withContext(Dispatchers.Main) {
-                    _playlist.value = foundTracks
+                    appContext = context.applicationContext
+                    val nasOnly = _playlist.value.filter { it.isNas && it.path.startsWith("http") }
+                    _playlist.value = (foundTracks + nasOnly).distinctBy { it.id }
                     if (_currentTrack.value == null || _currentTrack.value?.path.isNullOrEmpty()) {
                         _currentTrack.value = foundTracks.first()
                         _currentIndex.value = 0
                     }
+                    restorePlaybackState(context)
+                    notifyUsbStatus("已扫描加载 ${foundTracks.size} 首本地/U盘无损音乐")
                 }
             }
         }
@@ -296,19 +315,44 @@ object PlaylistManager {
         _isPlaying.value = nextState
         NativeAudioBridge.setPlaybackState(nextState)
         _currentTrack.value?.let { onTrackChangedListener?.invoke(it, nextState) }
+        appContext?.let { savePlaybackState(it) }
+    }
+
+    fun cyclePlayMode() {
+        val modes = PlayMode.entries
+        val nextMode = modes[(modes.indexOf(_playMode.value) + 1) % modes.size]
+        _playMode.value = nextMode
+        appContext?.let { savePlaybackState(it) }
     }
 
     fun skipNext() {
         val list = _playlist.value
         if (list.isEmpty()) return
-        val nextIdx = (_currentIndex.value + 1) % list.size
+        val nextIdx = when (_playMode.value) {
+            PlayMode.SINGLE_LOOP -> _currentIndex.value
+            PlayMode.SHUFFLE -> {
+                if (list.size == 1) 0
+                else (list.indices.filter { it != _currentIndex.value }).random()
+            }
+            PlayMode.SEQUENTIAL -> {
+                if (_currentIndex.value + 1 < list.size) _currentIndex.value + 1 else return
+            }
+            PlayMode.LIST_LOOP -> (_currentIndex.value + 1) % list.size
+        }
         playAtIndex(nextIdx)
     }
 
     fun skipPrevious() {
         val list = _playlist.value
         if (list.isEmpty()) return
-        val prevIdx = if (_currentIndex.value - 1 < 0) list.size - 1 else _currentIndex.value - 1
+        val prevIdx = when (_playMode.value) {
+            PlayMode.SINGLE_LOOP -> _currentIndex.value
+            PlayMode.SHUFFLE -> {
+                if (list.size == 1) 0
+                else (list.indices.filter { it != _currentIndex.value }).random()
+            }
+            else -> if (_currentIndex.value - 1 < 0) list.size - 1 else _currentIndex.value - 1
+        }
         playAtIndex(prevIdx)
     }
 
@@ -324,10 +368,72 @@ object PlaylistManager {
             delayMs = 1.8f,
             stereoWidth = stereoWidth
         )
+        appContext?.let { savePlaybackState(it) }
     }
 
     fun setAudioPreset(preset: com.byd.qianqian.model.AudioPreset) {
         _currentAudioPreset.value = preset
         NativeAudioBridge.setAudioPreset(preset.id)
+        appContext?.let { savePlaybackState(it) }
+    }
+
+    /** 持久化保存熄火前曲目、毫秒级进度、音效与播放模式 */
+    fun savePlaybackState(context: Context) {
+        appContext = context.applicationContext
+        val prefs = context.getSharedPreferences(PREF_PLAYBACK, Context.MODE_PRIVATE)
+        val posMs = try {
+            NativeAudioBridge.getCurrentPositionMs()
+        } catch (_: Exception) {
+            0L
+        }
+        prefs.edit()
+            .putString("last_track_id", _currentTrack.value?.id)
+            .putLong("last_position_ms", posMs)
+            .putInt("audio_preset_id", _currentAudioPreset.value.id)
+            .putBoolean("driver_delay_enabled", _driverDelayEnabled.value)
+            .putFloat("stereo_width", _stereoWidth.value)
+            .putString("play_mode", _playMode.value.name)
+            .apply()
+    }
+
+    /** 车辆上电后恢复熄火前音效、播放模式、曲目与毫秒级位置 */
+    fun restorePlaybackState(context: Context) {
+        appContext = context.applicationContext
+        val prefs = context.getSharedPreferences(PREF_PLAYBACK, Context.MODE_PRIVATE)
+
+        val presetId = prefs.getInt("audio_preset_id", com.byd.qianqian.model.AudioPreset.BYD_STANDARD.id)
+        val preset = com.byd.qianqian.model.AudioPreset.entries.firstOrNull { it.id == presetId }
+            ?: com.byd.qianqian.model.AudioPreset.BYD_STANDARD
+        setAudioPreset(preset)
+
+        val delayEnabled = prefs.getBoolean("driver_delay_enabled", true)
+        val stereoWidth = prefs.getFloat("stereo_width", 1.35f)
+        setDspParameters(delayEnabled, stereoWidth)
+
+        val modeName = prefs.getString("play_mode", PlayMode.LIST_LOOP.name)
+        _playMode.value = PlayMode.entries.firstOrNull { it.name == modeName } ?: PlayMode.LIST_LOOP
+
+        val lastTrackId = prefs.getString("last_track_id", null)
+        val lastPosMs = prefs.getLong("last_position_ms", 0L)
+        if (!lastTrackId.isNullOrEmpty()) {
+            val matchedIdx = _playlist.value.indexOfFirst { it.id == lastTrackId }
+            if (matchedIdx >= 0) {
+                _currentIndex.value = matchedIdx
+                _currentTrack.value = _playlist.value[matchedIdx]
+                if (lastPosMs > 0) {
+                    seekTo(lastPosMs)
+                }
+            }
+        }
+    }
+
+    fun notifyUsbStatus(message: String?) {
+        _scanStatusMessage.value = message
+        if (message != null) {
+            scope.launch {
+                delay(4000)
+                _scanStatusMessage.value = null
+            }
+        }
     }
 }

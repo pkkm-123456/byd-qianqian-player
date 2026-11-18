@@ -1,13 +1,16 @@
 package com.byd.qianqian.service
 
 import android.app.*
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.media.AudioAttributes
 import android.media.AudioFocusRequest
 import android.media.AudioManager
 import android.os.Build
 import android.os.Bundle
+import android.view.KeyEvent
 import androidx.media3.common.ForwardingPlayer
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
@@ -22,6 +25,7 @@ import com.byd.qianqian.manager.PlaylistManager
 import com.byd.qianqian.model.Track
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
+import kotlinx.coroutines.*
 
 class CarPlaybackService : MediaSessionService(), AudioManager.OnAudioFocusChangeListener {
 
@@ -38,6 +42,20 @@ class CarPlaybackService : MediaSessionService(), AudioManager.OnAudioFocusChang
     private lateinit var audioManager: AudioManager
     private lateinit var focusRequest: AudioFocusRequest
     private var resumeOnFocusGain = false
+    private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private var autoSaveJob: Job? = null
+
+    private val becomingNoisyReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            if (intent.action == AudioManager.ACTION_AUDIO_BECOMING_NOISY) {
+                if (PlaylistManager.isPlaying.value) {
+                    PlaylistManager.togglePlayPause()
+                }
+            }
+        }
+    }
+
+    private val usbDynamicReceiver = UsbStorageReceiver()
 
     override fun onCreate() {
         super.onCreate()
@@ -143,6 +161,37 @@ class CarPlaybackService : MediaSessionService(), AudioManager.OnAudioFocusChang
                     }
                     return super.onPlaybackResumption(mediaSession, controller)
                 }
+
+                override fun onMediaButtonEvent(
+                    session: MediaSession,
+                    controllerInfo: MediaSession.ControllerInfo,
+                    intent: Intent
+                ): Boolean {
+                    val keyEvent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        intent.getParcelableExtra(Intent.EXTRA_KEY_EVENT, KeyEvent::class.java)
+                    } else {
+                        @Suppress("DEPRECATION")
+                        intent.getParcelableExtra(Intent.EXTRA_KEY_EVENT)
+                    }
+                    if (keyEvent?.action == KeyEvent.ACTION_DOWN) {
+                        when (keyEvent.keyCode) {
+                            KeyEvent.KEYCODE_MEDIA_NEXT -> {
+                                PlaylistManager.skipNext()
+                                return true
+                            }
+                            KeyEvent.KEYCODE_MEDIA_PREVIOUS -> {
+                                PlaylistManager.skipPrevious()
+                                return true
+                            }
+                            KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE,
+                            KeyEvent.KEYCODE_HEADSETHOOK -> {
+                                PlaylistManager.togglePlayPause()
+                                return true
+                            }
+                        }
+                    }
+                    return super.onMediaButtonEvent(session, controllerInfo, intent)
+                }
             })
             .build()
 
@@ -151,8 +200,30 @@ class CarPlaybackService : MediaSessionService(), AudioManager.OnAudioFocusChang
             syncTrackToMediaSessionAndNotification(track, isPlaying)
         }
 
-        // 6. 异步扫描车机存储中的音乐
+        // 6. 注册蓝牙/输出通道防爆音监听与 USB U盘热插拔动态监听
+        registerReceiver(becomingNoisyReceiver, IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY))
+        val usbFilter = IntentFilter().apply {
+            addAction(Intent.ACTION_MEDIA_MOUNTED)
+            addAction(Intent.ACTION_MEDIA_EJECT)
+            addAction(Intent.ACTION_MEDIA_UNMOUNTED)
+            addAction(Intent.ACTION_MEDIA_REMOVED)
+            addDataScheme("file")
+        }
+        registerReceiver(usbDynamicReceiver, usbFilter)
+
+        // 7. 恢复熄火前播放状态并异步扫描车机存储与 U 盘中的音乐
+        PlaylistManager.restorePlaybackState(applicationContext)
         PlaylistManager.scanLocalAndUsbStorage(applicationContext)
+
+        // 8. 每 5 秒持久化当前毫秒进度，防止车辆突然断电丢失进度
+        autoSaveJob = serviceScope.launch {
+            while (isActive) {
+                delay(5000L)
+                if (PlaylistManager.isPlaying.value) {
+                    PlaylistManager.savePlaybackState(applicationContext)
+                }
+            }
+        }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -303,6 +374,11 @@ class CarPlaybackService : MediaSessionService(), AudioManager.OnAudioFocusChang
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? = mediaSession
 
     override fun onDestroy() {
+        autoSaveJob?.cancel()
+        serviceScope.cancel()
+        PlaylistManager.savePlaybackState(applicationContext)
+        try { unregisterReceiver(becomingNoisyReceiver) } catch (_: Exception) {}
+        try { unregisterReceiver(usbDynamicReceiver) } catch (_: Exception) {}
         audioManager.abandonAudioFocusRequest(focusRequest)
         mediaSession?.run {
             player.release()

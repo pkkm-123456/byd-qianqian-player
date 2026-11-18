@@ -40,6 +40,8 @@ class MainActivity : ComponentActivity() {
             val currentTrack by PlaylistManager.currentTrack.collectAsState()
             val isPlaying by PlaylistManager.isPlaying.collectAsState()
             val currentAudioPreset by PlaylistManager.currentAudioPreset.collectAsState()
+            val playMode by PlaylistManager.playMode.collectAsState()
+            val scanStatusMessage by PlaylistManager.scanStatusMessage.collectAsState()
             val tracks by PlaylistManager.playlist.collectAsState()
 
             var showNasSettings by remember { mutableStateOf(false) }
@@ -76,6 +78,9 @@ class MainActivity : ComponentActivity() {
                     isPlaying = isPlaying,
                     isNightMode = isNightModeState,
                     currentAudioPreset = currentAudioPreset,
+                    playMode = playMode,
+                    scanStatusMessage = scanStatusMessage,
+                    onCyclePlayMode = { PlaylistManager.cyclePlayMode() },
                     onOpenAudioProfile = { showAudioProfileSheet = true },
                     onOpenVoiceSettings = { showVoiceWakeSettings = true },
                     onOpenSettings = { showNasSettings = true },

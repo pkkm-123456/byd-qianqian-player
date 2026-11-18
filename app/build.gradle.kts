@@ -11,8 +11,8 @@ android {
         applicationId = "com.byd.qianqian"
         minSdk = 26 // 兼容比亚迪 DiLink 2.0 (Android 8/9) 与 DiLink 3.0/4.0/5.0
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0.0-car"
+        versionCode = 2
+        versionName = "1.1.0-car"
 
         ndk {
             // 同时支持 64位 与 老款 DiLink 32位 车机系统

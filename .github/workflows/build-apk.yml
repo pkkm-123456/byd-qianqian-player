@@ -63,31 +63,30 @@ jobs:
       - name: Rename APK
         run: |
           mkdir -p release-apk
-          cp app/build/outputs/apk/debug/*.apk release-apk/byd-qianqian-player-v1.0.0.apk
+          cp app/build/outputs/apk/debug/*.apk release-apk/byd-qianqian-player-v1.1.0.apk
 
       - name: Upload BYD Car Installable APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: byd-qianqian-player-v1.0.0
-          path: release-apk/byd-qianqian-player-v1.0.0.apk
+          name: byd-qianqian-player-v1.1.0
+          path: release-apk/byd-qianqian-player-v1.1.0.apk
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
         with:
-          tag_name: v1.0.0-release
-          name: "比亚迪千千静听车机版 v1.0.0 正式发布"
+          tag_name: v1.1.0-release
+          name: "比亚迪千千静听车机版 v1.1.0 车规增强版"
           body: |
-            ### 🚗 比亚迪「千千静听」车规级 Hi-Fi 播放器 APK 下载
+            ### 🚗 比亚迪「千千静听」车规级 Hi-Fi 播放器 v1.1.0 升级发布
             
-            本安装包已针对比亚迪宋/汉/唐/秦/元/海豹/腾势及全系 DiLink 2.0 / 3.0 / 4.0 / 5.0 旋转中控屏深度优化适配：
-            - **经典皮肤**：1:1 复刻 Windows 千千静听 5.x 经典金属质感深蓝面板、荧光绿滚字液晶屏与 60fps 动态 FFT 频谱。
-            - **熊猫车机模式**：深度接管比亚迪「小迪」语音广播与系统播控，呼叫「你好小迪，播放音乐 / 播放晴天 / 下一首」秒开千千静听并自动弹窗大屏。
-            - **原厂默认播放器接管**：内置无障碍接管服务，彻底解决车机硬编码启动酷我/酷狗的顽疾。
-            - **丹拿/帝瓦雷定制 DSP**：提供丹拿 Hi-Fi 直通、主驾 1.8ms 皇帝位声场延时补偿与 3D M/S 环绕声。
-            - **飞牛私有云 NAS 直连**：WebDAV 协议无损串流，智能 LRU 4GB 高速缓存，无网络离线盲听。
-            - **高德地图混音**：导航播报平滑压低音乐至 20%，雷达与倒车影像自动静音。
-          files: release-apk/byd-qianqian-player-v1.0.0.apk
+            **本次 v1.1.0 车规增强亮点**：
+            - **USB U盘热插拔实时扫描**：插拔 U 盘即刻自动扫描新增无损曲目与同名 `.lrc` 歌词，屏幕顶部实时弹出发现提示。
+            - **车规级熄火记忆持久化**：每 5 秒自动持久化当前曲目、毫秒级进度、丹拿/帝瓦雷 DSP 预设与播放模式，ACC 断电再上电精准续播。
+            - **迷你桌面悬浮控条**：高德地图全屏导航时，悬浮歌词升级为可双轴自由拖拽的金属蓝迷你控条，集成盲操 `⏮ / ⏯ / ⏭ / ✕` 按钮。
+            - **播放模式切换 & 蓝牙防爆音**：新增列表循环 / 单曲循环 / 随机播放 / 顺序播放一键切换，并增加 `ACTION_AUDIO_BECOMING_NOISY` 音频通道断开保护与方向盘物理媒体键 `KeyEvent` 深度响应。
+            - **熊猫车机小迪语音接管**：持续支持「你好小迪，播放音乐 / 播放晴天 / 下一首」系统广播拦截与无障碍接管。
+          files: release-apk/byd-qianqian-player-v1.1.0.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

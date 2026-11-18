@@ -40,6 +40,9 @@ fun AdaptivePlayerScreen(
     isPlaying: Boolean,
     isNightMode: Boolean,
     currentAudioPreset: com.byd.qianqian.model.AudioPreset,
+    playMode: com.byd.qianqian.manager.PlayMode = com.byd.qianqian.manager.PlayMode.LIST_LOOP,
+    scanStatusMessage: String? = null,
+    onCyclePlayMode: () -> Unit = {},
     onOpenAudioProfile: () -> Unit,
     onOpenSettings: () -> Unit,
     onOpenVoiceSettings: () -> Unit,
@@ -110,10 +113,30 @@ fun AdaptivePlayerScreen(
             TopStatusHeader(
                 windowMode = windowMode,
                 currentAudioPreset = currentAudioPreset,
+                playMode = playMode,
+                onCyclePlayMode = onCyclePlayMode,
                 onOpenAudioProfile = onOpenAudioProfile,
                 onOpenVoiceSettings = onOpenVoiceSettings,
                 onOpenSettings = onOpenSettings
             )
+            if (!scanStatusMessage.isNullOrEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp)
+                        .background(Color(0xFF0E2A38), RoundedCornerShape(6.dp))
+                        .border(1.dp, Color(0x5500E676), RoundedCornerShape(6.dp))
+                        .padding(horizontal = 10.dp, vertical = 4.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "💾 $scanStatusMessage",
+                        color = Color(0xFF00E676),
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            }
             Spacer(modifier = Modifier.height(6.dp))
 
             Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
@@ -647,6 +670,8 @@ private fun MetallicCircleButton(
 private fun TopStatusHeader(
     windowMode: CarWindowMode,
     currentAudioPreset: com.byd.qianqian.model.AudioPreset,
+    playMode: com.byd.qianqian.manager.PlayMode,
+    onCyclePlayMode: () -> Unit,
     onOpenAudioProfile: () -> Unit,
     onOpenVoiceSettings: () -> Unit,
     onOpenSettings: () -> Unit
@@ -688,6 +713,22 @@ private fun TopStatusHeader(
                 Text(
                     text = "🎛️ ${currentAudioPreset.title.substringBefore(" (")}",
                     color = Color(0xFF81D4FA),
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Medium
+                )
+            }
+
+            // 播放模式切换徽章（列表循环/单曲循环/随机/顺序）
+            Box(
+                modifier = Modifier
+                    .background(Color(0xFF142A3A), RoundedCornerShape(4.dp))
+                    .border(1.dp, Color(0x3300E676), RoundedCornerShape(4.dp))
+                    .clickable { onCyclePlayMode() }
+                    .padding(horizontal = 6.dp, vertical = 2.dp)
+            ) {
+                Text(
+                    text = if (windowMode == CarWindowMode.SPLIT_ONE_THIRD) playMode.icon else "${playMode.icon} ${playMode.label}",
+                    color = Color(0xFF00E676),
                     fontSize = 10.sp,
                     fontWeight = FontWeight.Medium
                 )

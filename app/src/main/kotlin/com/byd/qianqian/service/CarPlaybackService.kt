@@ -35,6 +35,7 @@ class CarPlaybackService : MediaSessionService(), AudioManager.OnAudioFocusChang
         const val ACTION_PLAY_PAUSE = "com.byd.qianqian.ACTION_PLAY_PAUSE"
         const val ACTION_PREV = "com.byd.qianqian.ACTION_PREV"
         const val ACTION_NEXT = "com.byd.qianqian.ACTION_NEXT"
+        const val ACTION_BOOT_RESUME = "com.byd.qianqian.ACTION_BOOT_RESUME"
     }
 
     private var mediaSession: MediaSession? = null
@@ -231,6 +232,13 @@ class CarPlaybackService : MediaSessionService(), AudioManager.OnAudioFocusChang
             ACTION_PLAY_PAUSE -> PlaylistManager.togglePlayPause()
             ACTION_PREV -> PlaylistManager.skipPrevious()
             ACTION_NEXT -> PlaylistManager.skipNext()
+            ACTION_BOOT_RESUME -> {
+                PlaylistManager.currentTrack.value?.let { track ->
+                    if (!PlaylistManager.isPlaying.value) {
+                        PlaylistManager.playTrack(track, applicationContext)
+                    }
+                }
+            }
             "android.media.action.MEDIA_PLAY_FROM_SEARCH" -> {
                 val q = intent.getStringExtra(android.app.SearchManager.QUERY).orEmpty()
                 PlaylistManager.searchAndPlay(q, applicationContext)

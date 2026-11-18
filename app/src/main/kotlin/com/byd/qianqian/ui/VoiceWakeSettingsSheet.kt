@@ -367,6 +367,25 @@ fun VoiceWakeSettingsSheet(
                 )
             }
 
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // 开关3：车辆开机启动自动播放熄火前记忆歌曲
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text("车辆开机自动续播记忆歌曲", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = Color.White)
+                    Text("车机通电（ACC ON）后自动后台拉起，精确恢复熄火前曲目与毫秒级进度", fontSize = 11.sp, color = Color(0xFF90A4AE))
+                }
+                Switch(
+                    checked = wakeConfig.autoResumeOnBoot,
+                    onCheckedChange = { VoiceWakeManager.setAutoResumeOnBoot(context, it) },
+                    colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = greenAccent)
+                )
+            }
+
             Spacer(modifier = Modifier.height(12.dp))
 
             // 按钮：开启无障碍服务（针对部分 DiLink 硬编码酷我/酷狗的系统）

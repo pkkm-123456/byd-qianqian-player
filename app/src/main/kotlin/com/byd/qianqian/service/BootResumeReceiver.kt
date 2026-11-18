@@ -14,7 +14,7 @@ class BootResumeReceiver : BroadcastReceiver() {
             com.byd.qianqian.manager.VoiceWakeManager.init(context)
             if (com.byd.qianqian.manager.VoiceWakeManager.config.value.autoResumeOnBoot) {
                 val serviceIntent = Intent(context, CarPlaybackService::class.java).apply {
-                    this.action = CarPlaybackService.ACTION_PLAY_PAUSE
+                    this.action = CarPlaybackService.ACTION_BOOT_RESUME
                 }
                 context.startForegroundService(serviceIntent)
             }

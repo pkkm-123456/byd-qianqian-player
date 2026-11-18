@@ -44,6 +44,7 @@ class MainActivity : ComponentActivity() {
             val scanStatusMessage by PlaylistManager.scanStatusMessage.collectAsState()
             val tracks by PlaylistManager.playlist.collectAsState()
 
+            var showSettingsHub by remember { mutableStateOf(false) }
             var showNasSettings by remember { mutableStateOf(false) }
             var showPlaylistSheet by remember { mutableStateOf(false) }
             var showAudioProfileSheet by remember { mutableStateOf(false) }
@@ -60,6 +61,13 @@ class MainActivity : ComponentActivity() {
                         PlaylistManager.setAudioPreset(preset)
                     },
                     onClose = { showAudioProfileSheet = false }
+                )
+            } else if (showSettingsHub) {
+                com.byd.qianqian.ui.SettingsHubSheet(
+                    onOpenAudioProfile = { showAudioProfileSheet = true },
+                    onOpenVoiceSettings = { showVoiceWakeSettings = true },
+                    onOpenNasSettings = { showNasSettings = true },
+                    onClose = { showSettingsHub = false }
                 )
             } else if (showPlaylistSheet) {
                 PlaylistSheet(
@@ -83,7 +91,7 @@ class MainActivity : ComponentActivity() {
                     onCyclePlayMode = { PlaylistManager.cyclePlayMode() },
                     onOpenAudioProfile = { showAudioProfileSheet = true },
                     onOpenVoiceSettings = { showVoiceWakeSettings = true },
-                    onOpenSettings = { showNasSettings = true },
+                    onOpenSettings = { showSettingsHub = true },
                     onOpenPlaylist = { showPlaylistSheet = true },
                     onToggleFloatingLyrics = { toggleFloatingLyricsOverlay() },
                     onTriggerInAppVoiceSearch = { voiceController?.startListeningWithDucking() },

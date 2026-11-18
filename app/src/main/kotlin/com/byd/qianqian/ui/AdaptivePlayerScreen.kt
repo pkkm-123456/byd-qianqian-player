@@ -112,11 +112,9 @@ fun AdaptivePlayerScreen(
         Column(modifier = Modifier.fillMaxSize()) {
             TopStatusHeader(
                 windowMode = windowMode,
-                currentAudioPreset = currentAudioPreset,
                 playMode = playMode,
                 onCyclePlayMode = onCyclePlayMode,
-                onOpenAudioProfile = onOpenAudioProfile,
-                onOpenVoiceSettings = onOpenVoiceSettings,
+                onOpenPlaylist = onOpenPlaylist,
                 onOpenSettings = onOpenSettings
             )
             if (!scanStatusMessage.isNullOrEmpty()) {
@@ -669,11 +667,9 @@ private fun MetallicCircleButton(
 @Composable
 private fun TopStatusHeader(
     windowMode: CarWindowMode,
-    currentAudioPreset: com.byd.qianqian.model.AudioPreset,
     playMode: com.byd.qianqian.manager.PlayMode,
     onCyclePlayMode: () -> Unit,
-    onOpenAudioProfile: () -> Unit,
-    onOpenVoiceSettings: () -> Unit,
+    onOpenPlaylist: () -> Unit,
     onOpenSettings: () -> Unit
 ) {
     Row(
@@ -683,7 +679,7 @@ private fun TopStatusHeader(
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(6.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             // 千千静听橙色经典耳机 Logo
             Box(
@@ -702,23 +698,7 @@ private fun TopStatusHeader(
                 fontWeight = FontWeight.Bold
             )
 
-            // 车载音响品牌声场预设切换徽章
-            Box(
-                modifier = Modifier
-                    .background(Color(0xFF183244), RoundedCornerShape(4.dp))
-                    .border(1.dp, Color(0x334FC3F7), RoundedCornerShape(4.dp))
-                    .clickable { onOpenAudioProfile() }
-                    .padding(horizontal = 6.dp, vertical = 2.dp)
-            ) {
-                Text(
-                    text = "🎛️ ${currentAudioPreset.title.substringBefore(" (")}",
-                    color = Color(0xFF81D4FA),
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.Medium
-                )
-            }
-
-            // 播放模式切换徽章（列表循环/单曲循环/随机/顺序）
+            // 紧凑播放模式切换徽章（列表循环/单曲循环/随机/顺序）
             Box(
                 modifier = Modifier
                     .background(Color(0xFF142A3A), RoundedCornerShape(4.dp))
@@ -735,33 +715,39 @@ private fun TopStatusHeader(
             }
         }
 
+        // 右上角极简图标：歌单 + 设置中心
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(6.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Box(
                 modifier = Modifier
-                    .background(Color(0xFF263238), RoundedCornerShape(4.dp))
-                    .clickable { onOpenVoiceSettings() }
-                    .padding(horizontal = 6.dp, vertical = 2.dp)
+                    .background(Color(0xFF182A3A), RoundedCornerShape(6.dp))
+                    .border(1.dp, Color(0x334FC3F7), RoundedCornerShape(6.dp))
+                    .clickable { onOpenPlaylist() }
+                    .padding(horizontal = 8.dp, vertical = 4.dp),
+                contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = if (windowMode == CarWindowMode.SPLIT_ONE_THIRD) "🎤" else "🎤 你好千千",
-                    color = Color(0xFFFFD54F),
-                    fontSize = 11.sp
+                    text = if (windowMode == CarWindowMode.SPLIT_ONE_THIRD) "☰" else "☰ 歌单",
+                    color = Color(0xFF81D4FA),
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium
                 )
             }
 
             Box(
                 modifier = Modifier
-                    .background(Color(0xFF1E293B), RoundedCornerShape(4.dp))
-                    .clickable { onOpenSettings() }
-                    .padding(horizontal = 6.dp, vertical = 2.dp)
+                    .size(30.dp)
+                    .background(Color(0xFF182A3A), CircleShape)
+                    .border(1.dp, Color(0x444FC3F7), CircleShape)
+                    .clickable { onOpenSettings() },
+                contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = if (windowMode == CarWindowMode.SPLIT_ONE_THIRD) "⚙" else "⚙ 飞牛NAS",
-                    color = Color(0xFF81D4FA),
-                    fontSize = 11.sp
+                    text = "⚙",
+                    color = Color(0xFFE0F7FA),
+                    fontSize = 15.sp
                 )
             }
         }
